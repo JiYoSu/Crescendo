@@ -2,6 +2,7 @@ package org.frc6423.robot.subsystems.intake;
 
 import static org.frc6423.robot.subsystems.intake.IntakeConstants.*;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -27,6 +28,9 @@ public class IntakeHardwareReal extends IntakeHardware{
     private final PositionTorqueCurrentFOC poseReq = new PositionTorqueCurrentFOC(0.0);
     private final VelocityTorqueCurrentFOC velReq = new VelocityTorqueCurrentFOC(0.0);
 
+    private final BaseStatusSignal pivotPose = pivot.getPosition();
+    // private final BaseStatusSignal rollerVel = roller.getVelocity();
+
     public IntakeHardwareReal() {
         pivotConf.Audio.BeepOnBoot = true;
         pivotConf.Audio.BeepOnConfig = true;
@@ -45,6 +49,8 @@ public class IntakeHardwareReal extends IntakeHardware{
         pivotConf.Feedback.FeedbackRemoteSensorID = PIVOT_ABS_ENCODER_CAN_ID;
         pivotConf.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
 
+        pivotConf.Slot0 = pivotFeedbackCfg;
+
         pivot.getConfigurator().apply(pivotConf);
 
         // Roller uses 20 and 40 for supply and stator, 40 for torque current
@@ -61,6 +67,16 @@ public class IntakeHardwareReal extends IntakeHardware{
         rollerConf.Feedback.FeedbackRemoteSensorID = ROLLER_ABS_ENCODER_CAN_ID;
     }
 
+    
+
+    @Override
+    public void updateSignals() {
+        BaseStatusSignal.refreshAll(pivotPose);
+        pivotAngleRevs = pivotPose.getValueAsDouble();
+    }
+
+
+
     @Override
     public boolean noteDetected() {
         // TODO Auto-generated method stub
@@ -69,8 +85,10 @@ public class IntakeHardwareReal extends IntakeHardware{
 
     @Override
     public Rotation2d getPivotAngle() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPivotAngle'");
+        /*BaseStatusSignal.refreshAll(pivotPose);
+        return Rotation2d.fromRotations(pivotPose.getValueAsDouble());*/
+
+        return Rotation2d.fromRotations(pivotAngleRevs);
     }
 
     @Override
